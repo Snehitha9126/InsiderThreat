@@ -1,0 +1,311 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    {% if active_tab == 'home' %}
+        <div class="card">
+            <h2 class="card-title">Welcome to the Insider Threat Detection System</h2>
+            <p>
+                This advanced system uses Bidirectional Long Short-Term Memory (BiLSTM) networks combined with an 
+                Attention mechanism to identify potential insider threats within organizational activities.
+            </p>
+            <p>
+                By analyzing patterns of behavior, our system can detect anomalies that may indicate malicious activity 
+                from within your organization.
+            </p>
+            
+            <div class="text-center mt-4">
+                <a href="{{ url_for('upload_file') }}" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Start Analysis
+                </a>
+            </div>
+        </div>
+        
+        <div class="feature-container">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Advanced Detection</h3>
+                <p>Neural network architecture designed specifically for sequential behavior analysis</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Real-time Analytics</h3>
+                <p>Visualize and interpret detection results with comprehensive dashboards</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>Attention Mechanism</h3>
+                <p>Focuses on the most relevant patterns for more accurate threat detection</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">How It Works</h2>
+            <p>
+                Our system uses a sophisticated neural network architecture that combines bidirectional LSTM layers 
+                with an attention mechanism to analyze user behavior patterns:
+            </p>
+            
+            <ol>
+                <li><strong>Data Processing:</strong> Upload your activity log files for analysis</li>
+                <li><strong>Feature Extraction:</strong> The system extracts relevant behavioral features</li>
+                <li><strong>Sequential Analysis:</strong> BiLSTM networks analyze patterns over time</li>
+                <li><strong>Attention Mechanism:</strong> Focuses on the most significant behavioral indicators</li>
+                <li><strong>Threat Detection:</strong> Identifies potential insider threats with high accuracy</li>
+            </ol>
+        </div>
+    {% elif active_tab == 'upload' %}
+        <div class="card">
+            <h2 class="card-title">Upload Activity Data</h2>
+            <p>Upload your activity data file for analysis. The system will process the data and identify potential insider threats.</p>
+            
+            <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" class="mt-4">
+                <div class="file-upload">
+                    <div class="file-upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <p>Drag & drop your file here or click to browse</p>
+                    <input type="file" id="file-input" name="file" accept=".csv,.xlsx,.xls,.json" required>
+                    <label for="file-input" class="file-upload-btn">
+                        <i class="fas fa-folder-open"></i> Browse Files
+                    </label>
+                    <p id="file-name" style="display: none;"></p>
+                </div>
+                
+                <div class="form-group mt-4 text-center">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Analyze
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-4">
+                <h4>Supported File Formats:</h4>
+                <ul>
+                    <li>CSV (.csv)</li>
+                    <li>Excel (.xlsx, .xls)</li>
+                    <li>JSON (.json)</li>
+                </ul>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle"></i> For optimal results, ensure your data includes user activity logs with timestamps and action information.
+                </div>
+            </div>
+        </div>
+    {% elif active_tab == 'dashboard' %}
+        <div class="card">
+            <h2 class="card-title">Analysis Dashboard</h2>
+            
+            {% if summary %}
+                <div class="dashboard-grid">
+                    <div class="summary-card">
+                        <h3>Total Records</h3>
+                        <div class="summary-value">{{ summary.total_records }}</div>
+                    </div>
+                    
+                    <div class="summary-card">
+                        <h3>Threats Detected</h3>
+                        <div class="summary-value">{{ summary.threat_count }}</div>
+                    </div>
+                    
+                    <div class="summary-card">
+                        <h3>Threat Percentage</h3>
+                        <div class="summary-value">{{ "%.2f"|format(summary.threat_percentage) }}%</div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="prediction-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="probability-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="viz-data" style="display: none;">{{ viz_data|safe }}</div>
+                
+                {% if summary.threat_count > 0 %}
+                    <div class="alert alert-danger mt-4">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Potential insider threats detected! Review the detailed analysis below.
+                    </div>
+                {% else %}
+                    <div class="alert alert-success mt-4">
+                        <i class="fas fa-check-circle"></i> <strong>Good news:</strong> No insider threats detected in the analyzed data.
+                    </div>
+                {% endif %}
+                
+                <div class="mt-4">
+                    <h3>Detailed Analysis</h3>
+                    <p>The BiLSTM+Attention model has analyzed the activity patterns and identified {{ summary.threat_count }} potential threat(s) out of {{ summary.total_records }} records.</p>
+                    
+                    <p>The analysis takes into account temporal patterns in user behavior, focusing on anomalies that deviate from normal activity profiles.</p>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('upload_file') }}" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Analyze New Data
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-bar" style="font-size: 5rem; color: var(--accent-color);"></i>
+                    <h3 class="mt-4">No analysis data available</h3>
+                    <p>Upload activity data to view the analysis dashboard.</p>
+                    <a href="{{ url_for('upload_file') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-upload"></i> Upload Data
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    {% elif active_tab == 'model' %}
+        <div class="card">
+            <h2 class="card-title">BiLSTM+Attention Model</h2>
+            
+            <p>
+                Our insider threat detection system uses a Bidirectional Long Short-Term Memory (BiLSTM) neural 
+                network enhanced with an Attention mechanism. This architecture is particularly effective for 
+                sequential data analysis and can identify subtle patterns that may indicate malicious activity.
+            </p>
+            
+            <h3 class="mt-4">Model Architecture</h3>
+            <p>
+                The model consists of multiple bidirectional LSTM layers that process the input sequence in both 
+                forward and backward directions. This allows it to capture context from past and future states.
+                The attention mechanism then focuses on the most relevant parts of the sequence, giving higher 
+                importance to unusual patterns that may indicate threats.
+            </p>
+            
+            <h3 class="mt-4">Model Performance Metrics</h3>
+            
+            {% if metrics %}
+                <div class="metrics-container">
+                    <div class="metric-card">
+                        <h4 class="metric-title">Accuracy</h4>
+                        <div class="metric-value">{{ "%.2f"|format(metrics.accuracy * 100) }}%</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h4 class="metric-title">Precision</h4>
+                        <div class="metric-value">{{ "%.2f"|format(metrics.precision * 100) }}%</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h4 class="metric-title">Recall</h4>
+                        <div class="metric-value">{{ "%.2f"|format(metrics.recall * 100) }}%</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h4 class="metric-title">F1 Score</h4>
+                        <div class="metric-value">{{ "%.2f"|format(metrics.f1_score * 100) }}%</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h4 class="metric-title">AUC</h4>
+                        <div class="metric-value">{{ "%.2f"|format(metrics.auc * 100) }}%</div>
+                    </div>
+                </div>
+                
+                <div id="metrics-data" style="display: none;">{{ metrics|tojson }}</div>
+                
+                <div class="row mt-5">
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="metrics-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="chart-container">
+                            <canvas id="comparison-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <h3 class="mt-4">Key Features</h3>
+            <ul>
+                <li><strong>Bidirectional Processing:</strong> Analyzes behavior patterns in both forward and backward directions</li>
+                <li><strong>Attention Mechanism:</strong> Focuses on the most significant temporal patterns</li>
+                <li><strong>Sequence Learning:</strong> Captures temporal dependencies in behavior data</li>
+                <li><strong>High Accuracy:</strong> Outperforms traditional machine learning approaches for threat detection</li>
+                <li><strong>Reduced False Positives:</strong> Attention mechanism helps reduce false alerts</li>
+            </ul>
+        </div>
+    {% elif active_tab == 'about' %}
+        <div class="card about-section">
+            <h2 class="card-title">About The Project</h2>
+            
+            <p>
+                The Insider Threat Detection System is an advanced security solution designed to identify potential 
+                threats from within an organization by analyzing user behavior patterns.
+            </p>
+            
+            <p>
+                Unlike traditional security measures that focus on external threats, this system specifically 
+                targets the detection of malicious activities performed by authorized users who misuse their 
+                access privileges.
+            </p>
+            
+            <h3 class="mt-4">Project Objectives</h3>
+            <ul>
+                <li>Detect anomalous behavior patterns that may indicate insider threats</li>
+                <li>Minimize false positives while maintaining high detection rates</li>
+                <li>Provide actionable insights through visualization and reporting</li>
+                <li>Integrate seamlessly with existing security infrastructure</li>
+                <li>Support proactive threat hunting and investigation</li>
+            </ul>
+            
+            <h3 class="mt-4">Technology Stack</h3>
+            <p>
+                This project leverages state-of-the-art technologies for both backend processing and frontend 
+                visualization:
+            </p>
+            
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <h4>Backend</h4>
+                    <ul>
+                        <li>Python Flask web framework</li>
+                        <li>TensorFlow/Keras for neural network implementation</li>
+                        <li>BiLSTM+Attention neural network architecture</li>
+                        <li>Pandas and NumPy for data processing</li>
+                        <li>Scikit-learn for evaluation metrics</li>
+                    </ul>
+                </div>
+                
+                <div class="col-md-6">
+                    <h4>Frontend</h4>
+                    <ul>
+                        <li>HTML5, CSS3, and JavaScript</li>
+                        <li>Bootstrap 5 for responsive design</li>
+                        <li>Chart.js for interactive visualizations</li>
+                        <li>Font Awesome for iconography</li>
+                        <li>Modern web design principles</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {% elif active_tab == 'error' %}
+        <div class="card text-center">
+            <i class="fas fa-exclamation-triangle" style="font-size: 5rem; color: var(--danger-color);"></i>
+            <h2 class="mt-3">{{ error }}</h2>
+            <p>Something went wrong. Please try again later.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">
+                Return to Home
+            </a>
+        </div>
+    {% endif %}
+{% endblock %}
